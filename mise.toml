@@ -1,0 +1,5 @@
+[tools]
+argocd = "latest"
+ctlptl = "latest"
+kind = "latest"
+kubectl = "latest"
