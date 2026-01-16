@@ -67,3 +67,10 @@ k8s_resource(new_name='argocd-misc',
 )
 
 initial_secret=local('kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo')
+
+k8s_custom_deploy ('Patch User',
+    apply_cmd='kubectl patch cm -n argocd argocd-cm --patch-file ./argocd/user-patch.yaml 1>&2',
+    delete_cmd='kubectl -n argocd delete argocd-cm', deps=['argocd-server'],
+)
+k8s_resource('Patch User', labels=['argocd'], resource_deps=['argocd-server'])
+
