@@ -4,6 +4,7 @@ A place to work on LFS-256 labs
 
 ## Lab 1 - Installing ArgoCD
 * Create a cluster `make start`
+* `tilt up` will perform the following steps:
 * Add namespace
   * `kubectl create namespace argocd`
 * Deploy ArgoCD using the quickstart manifest
@@ -28,3 +29,32 @@ argocd login localhost:8081 --username admin --password <PASSWORD>
 ```
 
 ## Lab 2 - Managing Applications with Argo CD
+* Fork the repo [LFS256-code](https://github.com/lftraining/LFS256-code)
+* Update the `targetPort` in the `service.yaml` manifest to `80` and commit
+* In the UI select `New App`
+  * Add a name `example-app`
+  * As project name choose `default`
+  * Under Sync Options tick `Auto-Create Namespace`
+  * Under Source paste in the repo of your fork
+  * Under Path choose `argocd/example-app` which reflects the path in the repo to the ArgoCD application manifests
+  * In destination we define the Cluster-URL as `https://kubernetes.default.svc` 
+  * Define a namespace of your choice such as `default`
+  * Click `Create`
+* Initially the app will be in a `OutOfSync` state. 
+* Click `Sync` to sync the app as we've left it as a Manual Sync in our setup
+
+### Access the app
+* Port forward the app:
+```
+kubectl port-forward svc/argocd-example-app-service 9090:80 --address 0.0.0.0
+```
+* Open a browser and navigate to `https://localhost:9090`
+*`curl localhost:9090` also works
+
+### Update the image
+* Navigate to `deployment.yaml`
+* Update the `image:` to `image: liquidreply/argocd-example-app:2`
+* Commit and push the changes 
+* Press `Refresh` in the UI and ArgoCD will detect the drift between the current state and the desired state.
+* You can change the app to `Auto-Sync` later to automatically pick up changes
+

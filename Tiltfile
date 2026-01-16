@@ -65,3 +65,5 @@ k8s_resource(new_name='argocd-misc',
     ],
     resource_deps = ['argocd:namespace']
 )
+
+initial_secret=local('kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo')
