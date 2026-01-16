@@ -1,5 +1,6 @@
 [tools]
-argocd = "latest"
-ctlptl = "latest"
-kind = "latest"
-kubectl = "latest"
+argocd = "v2.8.6"
+ctlptl = "0.8.42"
+kind = "0.26.0"
+kubectl = "1.31.13"
+tilt = "0.33.22"
