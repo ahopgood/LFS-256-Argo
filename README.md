@@ -6,7 +6,7 @@ A place to work on LFS-256 labs
 * [Lab 2 - Managing Applications with Argo CD](#lab2)
 * [Lab 3 - Argo CD Security and RBAC](#lab3)
 
-<a href="lab1"></a>
+<a name="lab1"></a>
 ## Lab 1 - Installing ArgoCD
 * Create a cluster `make start`
 * `tilt up` will perform the following steps:
@@ -33,7 +33,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 argocd login localhost:8081 --username admin --password <PASSWORD>
 ```
 
-<a href="lab2"></a>
+<a name="lab2"></a>
 ## Lab 2 - Managing Applications with Argo CD
 * Fork the repo [LFS256-code](https://github.com/lftraining/LFS256-code)
 * Update the `targetPort` in the `service.yaml` manifest to `80` and commit
@@ -78,7 +78,29 @@ kubectl port-forward svc/argocd-example-app-service 9090:80 --address 0.0.0.0
   * Background propagation: Delete app first and leave it to kubernetes to remove the child resources asynchronously afterwards
   * Do not touch the resources at all: leaves the kubernetes resources in place but removes it from ArgoCD's management
 
-<a href="lab3"></a>
+<a name="lab3"></a>
 ## Lab 3 - Argo CD Security and RBAC
+* Login to the argocd CLI
+  * `argocd login localhost:8080`
 
 ### Create a new user
+* Add a new user called "developer" by editing the `argocd-cm` configmap:
+  * `kubectl edit cm argocd-cm -n argocd`
+    ```yaml
+    data:
+    accounts.developer: login
+    ```
+* Update the password for the user via the CLI:
+  * `argocd account update-password --account developer --new-password Developer123`
+
+### Define the RBAC rules
+* Edit the `argocd-rbac-cm` configmap to add the role and rules for our user
+    ```yaml
+    policy.default: role:readonly
+    policy.csv: |
+      p, role:synconly, applications, sync, */*, allow
+      g, developer, role:synconly
+    ```
+  * Setting the default policy to `readonly` means that the user will only be able to view applications
+  * Creating a role `synconly` that is allowed to sync applications
+  * Creating a group `developer` that is allowed to sync applications via the `synconly` role

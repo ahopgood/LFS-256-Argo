@@ -68,13 +68,6 @@ k8s_resource(new_name='argocd-misc',
 
 initial_secret=local('kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo')
 
-# Cannot have later tasks depend on this task as the UI shows the server is still `Pending`
-#k8s_custom_deploy ('patch-user',
-#    apply_cmd='kubectl patch cm -n argocd argocd-cm --patch-file ./argocd/user-patch.yaml > /dev/null',
-#    delete_cmd='kubectl -n argocd delete argocd-cm',
-#    deps=['argocd-server'],
-#)
-#k8s_resource('patch-user', labels=['user-setup'], resource_deps=['argocd-server'])
 local_resource(name = 'patch-user', cmd = 'kubectl patch cm -n argocd argocd-cm --patch-file ./argocd/user-patch.yaml',
     labels=['user-setup'],
     resource_deps=['argocd-server'],
@@ -90,3 +83,11 @@ local_resource(name = 'Update user password',
     resource_deps=['cli login'],
     labels=['user-setup'],
 )
+
+# Apply the rbac policy patch:
+k8s_custom_deploy ( 'Patch RBAC Policy',
+    apply_cmd='kubectl patch cm -n argocd argocd-rbac-cm --patch-file ./argocd/developer-rbac-patch.yaml 1>&2',
+    delete_cmd='kubectl -n argocd delete argocd-rbac-cm',
+    deps=['argocd-server', 'Update user password'],
+)
+k8s_resource('Patch RBAC Policy', labels=['user-setup'], resource_deps=['argocd-server'])
