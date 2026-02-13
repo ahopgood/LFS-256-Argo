@@ -1,4 +1,5 @@
-## Running the workflow
+# Workflow Templates & DAG workflow
+## Running the workflow 
 * Give the default service account `admin` permissions so it can run our workflows
 ```
 kubectl create rolebinding default-admin --clusterrole=admin --serviceaccount=argowf:default -n argowf
@@ -32,4 +33,9 @@ kubectl delete workflowtemplates.argoproj.io echo-template -n argowf
 * Delete the rolebinding
 ```
 kubectl delete rolebinding default-admin -n argowf   
+```
+# CI/CD workflow
+* Deploy the CI/CD workflow
+```
+kubectl -n argowf apply -f workflows/workflow-ci.yaml
 ```
