@@ -1,6 +1,6 @@
 load('ext://namespace', 'namespace_yaml', 'namespace_inject')
 k8s_yaml(namespace_yaml('argocd'), allow_duplicates=False)
-k8s_resource(new_name='argocd:namespace', objects=['argocd:namespace'])
+k8s_resource(new_name='argocd:namespace', objects=['argocd:namespace'], labels = ['argocd'])
 
 k8s_yaml(namespace_inject(kustomize('argocd'), 'argocd'))
 
@@ -9,13 +9,14 @@ k8s_yaml(namespace_inject(kustomize('argocd'), 'argocd'))
 # gather all resources
 k8s_resource(workload='argocd-server', resource_deps = ['argocd:namespace'],
     port_forwards=['0.0.0.0:8081:8080'],
+    labels = ['argocd']
 )
-k8s_resource(workload='argocd-applicationset-controller', resource_deps = ['argocd:namespace'])
-k8s_resource(workload='argocd-dex-server', resource_deps = ['argocd:namespace'])
-k8s_resource(workload='argocd-notifications-controller', resource_deps = ['argocd:namespace'])
-k8s_resource(workload='argocd-redis', resource_deps = ['argocd:namespace'])
-k8s_resource(workload='argocd-repo-server', resource_deps = ['argocd:namespace'])
-k8s_resource(workload='argocd-application-controller', resource_deps = ['argocd:namespace'])
+k8s_resource(workload='argocd-applicationset-controller', resource_deps = ['argocd:namespace'], labels = ['argocd'])
+k8s_resource(workload='argocd-dex-server', resource_deps = ['argocd:namespace'], labels = ['argocd'])
+k8s_resource(workload='argocd-notifications-controller', resource_deps = ['argocd:namespace'], labels = ['argocd'])
+k8s_resource(workload='argocd-redis', resource_deps = ['argocd:namespace'], labels = ['argocd'])
+k8s_resource(workload='argocd-repo-server', resource_deps = ['argocd:namespace'], labels = ['argocd'])
+k8s_resource(workload='argocd-application-controller', resource_deps = ['argocd:namespace'], labels = ['argocd'])
 k8s_resource(new_name='argocd-misc',
     objects = [
        'applications.argoproj.io:customresourcedefinition',
@@ -63,7 +64,8 @@ k8s_resource(new_name='argocd-misc',
        'argocd-repo-server-network-policy:networkpolicy',
        'argocd-server-network-policy:networkpolicy',
     ],
-    resource_deps = ['argocd:namespace']
+    resource_deps = ['argocd:namespace'],
+    labels = ['argocd']
 )
 
 initial_secret=local('kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo')
@@ -91,3 +93,5 @@ k8s_custom_deploy ( 'Patch RBAC Policy',
     deps=['argocd-server', 'Update user password'],
 )
 k8s_resource('Patch RBAC Policy', labels=['user-setup'], resource_deps=['argocd-server'])
+
+include('workflow.Tiltfile')

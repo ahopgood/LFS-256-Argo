@@ -1,0 +1,4 @@
+resources:
+  - https://github.com/argoproj/argo-workflows/releases/download/v3.7.3/install.yaml
+patches:
+  - path: ./deployment-patch.yaml
