@@ -1,5 +1,6 @@
 [tools]
 argo = "4.0.0"
+argo-rollouts = "latest"
 argocd = "v2.8.6"
 ctlptl = "0.8.42"
 kind = "0.26.0"

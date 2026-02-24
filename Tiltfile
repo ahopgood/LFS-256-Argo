@@ -95,3 +95,5 @@ k8s_custom_deploy ( 'Patch RBAC Policy',
 k8s_resource('Patch RBAC Policy', labels=['user-setup'], resource_deps=['argocd-server'])
 
 include('workflow.Tiltfile')
+
+include('rollouts.Tiltfile')
