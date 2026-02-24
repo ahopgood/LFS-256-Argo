@@ -68,7 +68,9 @@ k8s_resource(new_name='argocd-misc',
     labels = ['argocd']
 )
 
-initial_secret=local('kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo')
+# needs to wait for the argocd namespace to exist so we inject this command in to the local_resources that depend on argocd:namespace and also need the password from the configmap
+initial_secret='$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo)'
+
 
 local_resource(name = 'patch-user', cmd = 'kubectl patch cm -n argocd argocd-cm --patch-file ./argocd/user-patch.yaml',
     labels=['user-setup'],
@@ -76,13 +78,13 @@ local_resource(name = 'patch-user', cmd = 'kubectl patch cm -n argocd argocd-cm 
 )
 
 local_resource(name = 'cli login', cmd = 'argocd login localhost:8081 --insecure --username admin --password ' + str(initial_secret),
-    resource_deps=['patch-user'],
+    resource_deps=['patch-user', 'argocd:namespace'],
     labels=['user-setup'],
 )
 
 local_resource(name = 'Update user password',
     cmd = 'argocd account update-password --account developer --new-password Developer123 --current-password ' + str(initial_secret),
-    resource_deps=['cli login'],
+    resource_deps=['cli login','argocd:namespace'],
     labels=['user-setup'],
 )
 
