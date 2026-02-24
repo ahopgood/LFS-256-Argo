@@ -5,7 +5,7 @@
 kubectl apply -f rollouts/rollout-example.yaml
 ```
 
-## Inspecting the rollout
+### Inspecting the rollout
 * View the rollout status 
 ```
 kubectl get rollout
@@ -62,7 +62,7 @@ NAME                                           KIND        STATUS     AGE  INFO
       ├──□ rollout-bluegreen-5ffd47b8d4-dc9m4  Pod         ✔ Running  5s   ready:1/1
       └──□ rollout-bluegreen-5ffd47b8d4-mlmcn  Pod         ✔ Running  5s   ready:1/1
 ```
-## Performing an upgrade
+### Performing an upgrade
 * As part of our blue/green rollout we want to promote the `green` image:
 ```
 kubectl apply -f rollouts/rollout-green.yaml
@@ -161,7 +161,7 @@ Session Affinity:         None
 Internal Traffic Policy:  Cluster
 Events:                   <none>
 ```
-## Rollback
+### Rollback
 ```
 kubectl argo rollouts undo rollout-bluegreen
 ```
@@ -196,7 +196,7 @@ NAME                                           KIND        STATUS     AGE  INFO
 ```
 kubectl argo rollouts promote rollout-bluegreen
 ```
-## Tidy up
+### Tidy up
 * Delete the rollout 
 ```
 kubectl delete rollout rollout-bluegreen
@@ -206,6 +206,60 @@ kubectl delete rollout rollout-bluegreen
 kubectl delete svc rollout-bluegreen-active,rollout-bluegreen-preview 
 ```
 
+## Migrating Deployments to Rollouts
+* Create an nginx deployment
+```
+kubectl create deploy nginx-deployment --image=nginx --replicas=3
+```
+* The `migrated-rollout.yaml` points to our deployment via 
+```
+workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+```
+* Apply it
+```
+kubectl apply -f rollouts/migrated-rollout.yaml 
+```
+* Now we have 6 instances; 3 via k8s Deployment and another 3 via Rollouts: 
+```
+kubectl get ro,deployment,po  
+NAME                                DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+rollout.argoproj.io/nginx-rollout   3         3         3            3           49s
+
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx-deployment   3/3     3            3           4m8s
+
+NAME                                    READY   STATUS    RESTARTS   AGE
+pod/nginx-deployment-6cfb98644c-4gtbb   1/1     Running   0          4m8s
+pod/nginx-deployment-6cfb98644c-gb9rl   1/1     Running   0          4m8s
+pod/nginx-deployment-6cfb98644c-w8bgr   1/1     Running   0          4m8s
+pod/nginx-rollout-6d7df6cfcb-4vbv4      1/1     Running   0          49s
+pod/nginx-rollout-6d7df6cfcb-scthb      1/1     Running   0          49s
+pod/nginx-rollout-6d7df6cfcb-wscjf      1/1     Running   0          49s
+```
+### Scale down the deployment
+```
+kubectl scale deployment/nginx-deployment --replicas=0
+```
+* Scaling down can also be done via the Argo Rollout Controller via the `scaleDown` parameter (with values: `never`, `onsuccess`, `progressively`)
+```
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+    scaleDown: onsuccess
+```
+### Tidy Up
+* Delete the rollout
+```
+kubectl delete rollout nginx-rollout
+```
+* Delete the deployment
+```
+kubectl delete deployment nginx-deployment
+```
 
 ## Troubleshooting
 > time="2026-02-23T10:54:39Z" level=info msg="pkg/mod/k8s.io/client-go@v0.29.3/tools/cache/reflector.go:229: failed to list argoproj.io/v1alpha1, Resource=analysisruns: the server could not find the requested resource"
