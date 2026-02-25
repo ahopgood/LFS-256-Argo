@@ -99,3 +99,5 @@ k8s_resource('Patch RBAC Policy', labels=['user-setup'], resource_deps=['argocd-
 include('workflow.Tiltfile')
 
 include('rollouts.Tiltfile')
+
+include('events.Tiltfile')

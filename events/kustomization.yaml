@@ -1,0 +1,9 @@
+resources:
+  # argocd namespace
+  - https://raw.githubusercontent.com/argoproj/argo-events/stable/manifests/install.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-events/stable/manifests/install-validating-webhook.yaml
+  # argo-events namespace
+  - https://raw.githubusercontent.com/argoproj/argo-events/stable/examples/eventbus/native.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-events/stable/examples/event-sources/webhook.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-events/master/examples/rbac/sensor-rbac.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-events/master/examples/rbac/workflow-rbac.yaml

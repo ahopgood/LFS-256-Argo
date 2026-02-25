@@ -1,7 +1,6 @@
 resources:
   - https://github.com/argoproj/argo-rollouts/releases/download/v1.8.3/install.yaml
-#patches:
-#  - path: ./deployment-patch.yaml
+
 
 
 
