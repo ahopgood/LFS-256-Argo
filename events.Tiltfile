@@ -37,7 +37,7 @@ k8s_resource(new_name='eventbus', resource_deps = ['argo-events:namespace', 'eve
     ]
 )
 # Event source
-k8s_resource(new_name='event-source', resource_deps = ['argo-events:namespace', 'events-misc'], labels=['argo-events'],
+k8s_resource(new_name='event-source', resource_deps = ['argo-events:namespace', 'events-misc', 'eventbus'], labels=['argo-events'],
     objects=['webhook:eventsource'],
     port_forwards=['12000:12000'],
 )
@@ -60,6 +60,15 @@ k8s_resource(new_name='sensor-rbac', resource_deps = ['argo-events:namespace', '
 
 k8s_yaml(namespace_inject('events/sensor.yaml',  'argo-events'))
 
-k8s_resource(new_name='event-sensor', resource_deps = ['argo-events:namespace', 'events-misc'], labels=['argo-events'],
+k8s_resource(new_name='event-sensor', resource_deps = ['argo-events:namespace', 'events-misc', 'eventbus'], labels=['argo-events'],
     objects=['webhook:sensor'],
+)
+
+k8s_resource('pulsar', resource_deps = ['argo-events:namespace', 'events-misc', 'eventbus'], labels=['argo-events'], port_forwards=['6650:6650'])
+
+k8s_yaml(namespace_inject('events/pulsar-sensor.yaml',  'argo-events'))
+
+k8s_resource(new_name='pulsar-misc', resource_deps = ['argo-events:namespace', 'events-misc', 'eventbus', 'pulsar'],
+    labels=['argo-events'],
+    objects=['pulsar:eventsource', 'pulsar:sensor'],
 )

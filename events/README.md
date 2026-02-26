@@ -93,6 +93,95 @@ spec:
 ```
 curl -d '{"message":"this is my first webhook"}' -H "Content-Type:application/json" -X POST http://localhost:12000/example
 ```
+
+## Events Triggered via Pulsar
+* Install pulsar
+```
+kubectl -n argo-events apply -f
+https://raw.githubusercontent.com/lftraining/LFS256-code/main/argoevents/pulsar.yaml
+```
+* port forward
+```
+kubectl get pods -n argo-events
+kubectl -n argo-events port-forward <POD NAME OF PULSAR> 6650:6650
+```
+* Add pulsar as a source
+```
+kubectl -n argo-events apply -f
+https://raw.githubusercontent.com/argoproj/argo-events/stable/examples/event-sources/pulsar.yaml
+```
+### Define the sensor for pulsar
+```
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: pulsar
+spec:
+  template:
+    serviceAccountName: operate-workflow-sa
+  dependencies:
+    - name: test-dep
+      eventSourceName: pulsar
+      eventName: example
+  triggers:
+    - template:
+        name: workflow-trigger
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: pulsar-wf-
+              spec:
+                entrypoint: cowsay
+                arguments:
+                  parameters:
+                    - name: message
+                      # value will get overridden by the event payload
+                      value: hello world
+                templates:
+                  - name: cowsay
+                    inputs:
+                      parameters:
+                        - name: message
+                    container:
+                      image: rancher/cowsay:latest
+                      command: [cowsay]
+                      args: ["{{inputs.parameters.message}}"]
+            parameters:
+              - src:
+                  dependencyName: test-dep
+                  dataKey: body
+                dest: spec.arguments.parameters.0.value
+```
+### Trigger the workflow
+* Interact with the pod to trigger a workflow
+```
+kubectl -n argo-events get pods
+kubectl -n argo-events exec -it <NAME OF PULSAR POD> -- /bin/bash
+```
+* View in the [Argo Workflow UI](https://0.0.0.0:2746/)
+```
+cd bin
+./pulsar-client produce test --messages "Test"
+```
+* View the logs
+  * `kubectl logs -n argo-events pulsar-wf-9lxl`
+```
+ __________ 
+< dGVzdA== >
+ ---------- 
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+time="2026-02-26T15:55:10.576Z" level=info msg="sub-process exited" argo=true error="<nil>"
+```
+* The message is in base64m, decode:  `echo "dGVzdA==" | base64 -d`
+
 ## Troubleshooting
 ### Controller Manager fails to start
 ```
@@ -127,3 +216,8 @@ k8s_resource(new_name='events-misc', resource_deps = ['argo-events:namespace'], 
 Build Failed: admission webhook "webhook.argo-events.argoproj.io" denied the request: failed to get EventBus eventBusName=default; err=eventbus.argoproj.io "default" not found
 ```
 * Make sure your sensor is in the correct namespace
+
+### Pulsar
+```
+{"level":"error","ts":"2026-02-26T15:36:54.086694012Z","logger":"argo-events.sensor","caller":"sensors/listener.go:380","msg":"Failed to execute a trigger","sensorName":"pulsar","error":"failed to execute trigger, Workflow.argoproj.io \"pulsar-wf-fp7d4\" is invalid: spec: Required value","triggerName":"workflow-trigger","stacktrace":"github.com/argoproj/argo-events/pkg/sensors.(*SensorContext).triggerActions.func1\n\t/home/runner/work/argo-events/argo-events/pkg/sensors/listener.go:380"}
+```

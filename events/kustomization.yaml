@@ -7,3 +7,7 @@ resources:
   - https://raw.githubusercontent.com/argoproj/argo-events/stable/examples/event-sources/webhook.yaml
   - https://raw.githubusercontent.com/argoproj/argo-events/master/examples/rbac/sensor-rbac.yaml
   - https://raw.githubusercontent.com/argoproj/argo-events/master/examples/rbac/workflow-rbac.yaml
+  # Apache pulsar
+  - https://raw.githubusercontent.com/lftraining/LFS256-code/main/argoevents/pulsar.yaml
+  # pulsar event source
+  - https://raw.githubusercontent.com/argoproj/argo-events/stable/examples/event-sources/pulsar.yaml
